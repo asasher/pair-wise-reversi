@@ -19,7 +19,7 @@ const DEFAULT_PORT = 8080
 const PORT = process.env.PORT || DEFAULT_PORT
 const APP_NAME = 'Reversi'
 
-const MONGO_URI = 'localhost:27017/test'
+const MONGO_URI = process.env.MONGODB_URI
 const db = pmongo(MONGO_URI, ['games'])
 
 const app = koa()
@@ -34,7 +34,7 @@ const STATIC_FILES = [
     '/rxjs/bundles/Rx.js',
     '/angular2/bundles/angular2.dev.js',
 ]
-app.use(function *(next) {
+app.use(function*(next) {
     if (STATIC_FILES.includes(this.path)) {
         const p = path.join(NODE_MODULES_DIR, this.path)
         this.body = yield fs.readFile(p, 'utf8')
@@ -45,9 +45,9 @@ app.use(function *(next) {
 
 const CLIENT_DIR = 'client/'
 const ALLOWED_EXT = ['.js', '.css', '.map']
-app.use(function *(next) {
+app.use(function*(next) {
     const ext = path.extname(this.path)
-    if (ALLOWED_EXT.includes(ext)) {        
+    if (ALLOWED_EXT.includes(ext)) {
         this.body = yield fs.readFile(path.join(CLIENT_DIR, this.path), 'utf8')
         if (ext === '.css') {
             this.type = 'text/css'
@@ -61,7 +61,7 @@ const JADE_DEFAULT_LOCALS = {
 }
 const JADE_EXT = '.jade'
 const INDEX_PATH = '/index'
-app.use(function *() {
+app.use(function*() {
     let p = ''
     if (this.path === '/' || this.path === INDEX_PATH) {
         p = path.join(CLIENT_DIR, INDEX_PATH) + JADE_EXT
@@ -74,7 +74,7 @@ app.use(function *() {
 const server = http.createServer(app.callback())
 const socket = io(server)
 
-const SERVER_SOCKETS = { }
+const SERVER_SOCKETS = {}
 const BOARD_SIZE = 8
 const NO_DISK = 0
 const GAME_WAITING = 0
@@ -85,10 +85,10 @@ const P2 = 1
 const P1_DISK = 1
 const P2_DISK = -1
 const DISKS = [P1_DISK, P2_DISK]
-const SID_GID = { }
+const SID_GID = {}
 socket.on('connection', (s) => {
     s.emit('hello')
-    s.on('hello', co.wrap(function *(g) {
+    s.on('hello', co.wrap(function*(g) {
         let pid = s.id
         let gid = null
         if (g) {
@@ -105,7 +105,7 @@ socket.on('connection', (s) => {
         sendJoined(s, pid, game)
         sendUpdate(game)
     }))
-    s.on('move', co.wrap(function *(move) {
+    s.on('move', co.wrap(function*(move) {
         let game = yield findGame(move.pid, move.gid)
         if (game && game.status === GAME_ACTIVE) {
             game = makeMove(move.pid, game, move.i)
@@ -129,6 +129,7 @@ function sendJoined(s, pid, game) {
     gameView.pIndex = game.players.indexOf(pid)
     s.emit('joined', gameView)
 }
+
 function sendUpdate(game) {
     game.playerServers.forEach(host => {
         if (!SERVER_SOCKETS[host]) {
@@ -164,6 +165,7 @@ const L = -1
 const UL = -9
 const DIRS = [U, UR, R, DR, D, DL, L, UL]
 const SIDX = 0
+
 function checkAndMove(game, move) {
     if (!game.board || game.board[move] !== NO_DISK) {
         return game
@@ -181,7 +183,7 @@ function checkAndMove(game, move) {
             } else if (i === ONE) {
                 if (game.board[step] !== otherDisk) {
                     return false
-                } 
+                }
             } else if (game.board[step] === NO_DISK) {
                 return false
             } else if (game.board[step] === DISKS[game.turn]) {
@@ -201,7 +203,7 @@ function checkAndMove(game, move) {
                 game.board[step] = DISKS[game.turn]
             }
         })
-        const count = Math.abs(game.board.reduce((prev, curr) => prev + curr)) 
+        const count = Math.abs(game.board.reduce((prev, curr) => prev + curr))
         if (count === BOARD_SIZE * BOARD_SIZE) {
             game.status = GAME_DONE
         } else {
@@ -210,26 +212,28 @@ function checkAndMove(game, move) {
     }
     return game
 }
+
 function walk(d, move) {
     return _.range(SIDX, BOARD_SIZE)
-                .map(i => move + i * d)
-                .filter(i => {
-                    const r = Math.floor(i / BOARD_SIZE)
-                    const c = i % BOARD_SIZE
-                    if (d === R || d === L) {
-                        if (r !== Math.floor(move / BOARD_SIZE)) {
-                            return false
-                        }
-                    }
-                    return r >= ZERO && r < BOARD_SIZE &&
-                        c >= ZERO && c < BOARD_SIZE
-                })
+        .map(i => move + i * d)
+        .filter(i => {
+            const r = Math.floor(i / BOARD_SIZE)
+            const c = i % BOARD_SIZE
+            if (d === R || d === L) {
+                if (r !== Math.floor(move / BOARD_SIZE)) {
+                    return false
+                }
+            }
+            return r >= ZERO && r < BOARD_SIZE &&
+                c >= ZERO && c < BOARD_SIZE
+        })
 }
 
 const MUR = 28
 const MDR = 36
 const MDL = 35
 const MUL = 27
+
 function newGame(pid, ps) {
     const game = {
         gid: uuid.v4(),
@@ -250,16 +254,13 @@ function newGame(pid, ps) {
 
 function findGame(pid, gid, ps) {
     return db.games.findOne({
-        $or: [
-            {
-                gid: gid, // eslint-disable-line new-cap
-                status: GAME_ACTIVE,
-            },
-            {
-                status: GAME_WAITING,
-            },
-        ],
-    }).then(game => {        
+        $or: [{
+            gid: gid, // eslint-disable-line new-cap
+            status: GAME_ACTIVE,
+        }, {
+            status: GAME_WAITING,
+        }, ],
+    }).then(game => {
         if (game) {
             if (game.status === GAME_ACTIVE) {
                 console.log('found active games')
@@ -283,27 +284,25 @@ function saveGame(game) {
     if (!game) {
         return null
     }
-    return db.games.update(
-        {
+    return db.games.update({
             gid: game.gid,
         },
-        game,
-        {
+        game, {
             upsert: true,
         }).then((res) => {
-            console.log('saved game', res)
-            return game
-        }).catch(err => {
-            console.log('err', err)
-            return null
-        })
+        console.log('saved game', res)
+        return game
+    }).catch(err => {
+        console.log('err', err)
+        return null
+    })
 }
 
 function deleteGame(gid) {
     if (!gid) {
         return
     }
-    db.games.remove({ 
+    db.games.remove({
         gid: gid, // eslint-disable-line new-cap 
     }, ONE).then((res) => {
         console.log('deleted game', gid, res)
