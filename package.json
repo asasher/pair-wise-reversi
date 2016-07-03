@@ -5,7 +5,7 @@
     "tsc": "tsc",
     "tsc:w": "tsc -w",
     "app": "nodemon --harmony server/main.js",
-    "start": "tsc && npm run app",
+    "start": "npm run app",
     "browser-sync": "browser-sync start -p \"localhost:8080\" -f \"client\"",
     "dev": "tsc && concurrently \"npm run tsc:w\" \"npm run app\" \"npm run browser-sync\"",
     "typings": "typings",
