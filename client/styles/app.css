@@ -1,0 +1,68 @@
+.info {
+    width: 75vmin;
+    margin: auto;
+    font-family: monospace;
+}
+.info p {
+    position: absolute;
+    font-family: monospace;
+    transition: all 0.5s ease-in-out;
+}
+.info p.hidden {
+    opacity: 0;
+}
+
+hr {
+    border: 1px dashed #E0DEDE;
+}
+
+.board {
+    box-sizing: border-box;
+    width: 75vmin;
+    height: 75vmin;
+    margin: auto;
+    position: relative;    
+    border: 3px dashed #32BEE8;
+    padding: 0.5em;
+    opacity: 1.0;
+    transition: all 1s ease-in-out;
+}
+.board.waiting {
+    opacity: 0.3;
+}
+.board.flip {
+    border: 3px dashed #F44336;
+}
+.tile {
+    box-sizing: border-box;
+    width: 12.5%;
+    height: 12.5%;
+    padding: 0.15em;
+    float: left;  
+    background-color: #FBFBFB;
+}
+.tile:nth-child(16n+1),
+.tile:nth-child(16n+3),
+.tile:nth-child(16n+5),
+.tile:nth-child(16n+7),
+.tile:nth-child(16n+10),
+.tile:nth-child(16n+12),
+.tile:nth-child(16n+14),
+.tile:nth-child(16n+16) {
+    background-color: #545454;
+}
+.tile::after {
+    float: none;
+    clear: both;
+}
+.disk {
+    width: 100%;
+    height: 100%;
+    background-color: #32BEE8;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.35);     
+}
+.disk.flip {
+    background-color: #F44336;        
+}

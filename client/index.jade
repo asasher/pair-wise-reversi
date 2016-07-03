@@ -1,0 +1,27 @@
+doctype html
+html(lang="en")
+    head
+        title= pageTitle
+        link(rel='stylesheet', href='styles/main.css')
+        script(src='es6-shim/es6-shim.min.js')
+        script(src='systemjs/dist/system-polyfills.js')
+        script(src='angular2/es6/dev/src/testing/shims_for_IE.js')
+        script(src='angular2/bundles/angular2-polyfills.js')
+        script(src='systemjs/dist/system.src.js')
+        script(src='rxjs/bundles/Rx.js')
+        script(src='angular2/bundles/angular2.dev.js')
+        script(src='socket.io/socket.io.js')
+        script.
+            System.config({
+                packages: {
+                    app: {
+                        format: 'register',
+                        defaultExtension: 'js'
+                    }
+                }
+            })
+            System.import('app/main')
+                .then(null, console.error.bind(console))
+    body
+        app ...
+        

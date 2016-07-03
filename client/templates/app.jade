@@ -1,0 +1,8 @@
+div(*ngIf!='game',[class.waiting]!='game.status === GAME_WAITING',[class.flip]!='game.turn !== P1_TURN').board
+    div(*ngFor!='#tile of game.board; #i = index', (click)!='move(i)').tile
+        div(*ngIf!='tile !== NO_DISK', [class.flip]!='tile === P2_DISK').disk
+hr
+div(*ngIf!='game').info
+    p([class.hidden]!='!(game.status === GAME_DONE && game.turn === game.pIndex)') You won !!!
+    p([class.hidden]!='!(game.status === GAME_WAITING)') Waiting for other player...
+    p([class.hidden]!='!(game.status === GAME_ACTIVE && game.turn === game.pIndex)') Your move...
