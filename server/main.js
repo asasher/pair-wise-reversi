@@ -1,3 +1,5 @@
+///<reference path="../typings/browser.d.ts"/>
+
 'use strict'
 
 const http = require('http')
