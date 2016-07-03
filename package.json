@@ -33,6 +33,6 @@
   },
   "devDependencies": {
     "browser-sync": "latest",
-    "concurrently": "latest",
+    "concurrently": "latest"
   }
 }
