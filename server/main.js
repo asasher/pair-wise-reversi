@@ -20,9 +20,11 @@ const PORT = process.env.PORT || DEFAULT_PORT
 const APP_NAME = 'Reversi'
 
 const MONGO_URI = process.env.MONGODB_URI
-const db = pmongo(MONGO_URI, ['games'])
+
+// const db = pmongo(MONGO_URI, ['games'])
 
 const app = koa()
+const GAMES = {}
 
 const NODE_MODULES_DIR = 'node_modules/'
 const STATIC_FILES = [
@@ -253,6 +255,8 @@ function newGame(pid, ps) {
 }
 
 function findGame(pid, gid, ps) {
+    // getting weird error with mLab
+    /*
     return db.games.findOne({
         $or: [{
             gid: gid, // eslint-disable-line new-cap
@@ -260,7 +264,18 @@ function findGame(pid, gid, ps) {
         }, {
             status: GAME_WAITING,
         }, ],
-    }).then(game => {
+    })
+    */
+    let g = null
+    if (GAMES[gid] && GAMES[gid].status === GAME_ACTIVE) {
+        g = GAMES[gid]
+    } else {
+        let waiting_gid = Object.keys(GAMES).find((key => GAMES[key].status === GAME_WAITING))
+        if (waiting_gid) {
+            g = GAMES[waiting_gid]
+        }
+    }
+    return Promise.resolve(g).then(game => {
         if (game) {
             if (game.status === GAME_ACTIVE) {
                 console.log('found active games')
@@ -284,6 +299,11 @@ function saveGame(game) {
     if (!game) {
         return null
     }
+    GAMES[game.gid] = game
+    return Promise.resolve(game)
+
+    // weird error with mlab
+    /*
     return db.games.update({
             gid: game.gid,
         },
@@ -296,12 +316,17 @@ function saveGame(game) {
         console.log('err', err)
         return null
     })
+    */
 }
 
 function deleteGame(gid) {
     if (!gid) {
         return
     }
+    delete GAMES[gid]
+
+    // weird error with mlab
+    /*
     db.games.remove({
         gid: gid, // eslint-disable-line new-cap 
     }, ONE).then((res) => {
@@ -309,6 +334,7 @@ function deleteGame(gid) {
     }).catch(err => {
         console.log('err', err)
     })
+    */
 }
 
 server.listen(PORT)
